@@ -3,7 +3,6 @@
 # Authors: Ines Sorrentino
 
 if(FRAMEWORK_COMPILE_JointTrajectoryPlayer)
-
   add_bipedal_locomotion_application(
     NAME joint-trajectory-player
     SOURCES src/Main.cpp src/Module.cpp
@@ -11,6 +10,7 @@ if(FRAMEWORK_COMPILE_JointTrajectoryPlayer)
     LINK_LIBRARIES  YARP::YARP_dev
     BipedalLocomotion::ParametersHandlerYarpImplementation
     BipedalLocomotion::RobotInterfaceYarpImplementation
+    BipedalLocomotion::VectorsCollection
     matioCpp::matioCpp
     BipedalLocomotion::matioCppConversions
     )

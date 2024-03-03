@@ -6,6 +6,7 @@
  */
 
 #include <iomanip>
+#include <iostream>
 
 #include <BipedalLocomotion/ParametersHandler/YarpImplementation.h>
 #include <BipedalLocomotion/RobotInterface/YarpHelper.h>
@@ -20,6 +21,7 @@
 #include <yarp/dev/IEncoders.h>
 
 #include <BipedalLocomotion/Conversions/matioCppConversions.h>
+
 
 using namespace BipedalLocomotion;
 using namespace BipedalLocomotion::JointTrajectoryPlayer;
@@ -118,6 +120,44 @@ bool Module::configure(yarp::os::ResourceFinder& rf)
 {
     auto parametersHandler = std::make_shared<ParametersHandler::YarpImplementation>(rf);
 
+    // my modifications
+    if (!m_vectorsCollectionServer.initialize(parametersHandler->getGroup("LOGGER")))
+    {
+        log()->error("[DesiredTrajectory::configure] Unable to configure the server.");
+        return false;
+    }
+
+    m_vectorsCollectionServer.populateMetadata(
+        "positions", 
+        {
+            "torso_pitch",
+            "torso_roll",
+            "torso_yaw", 
+            "l_shoulder_pitch", 
+            "l_shoulder_roll", 
+            "l_shoulder_yaw", 
+            "l_elbow", 
+            "r_shoulder_pitch", 
+            "r_shoulder_roll", 
+            "r_shoulder_yaw", 
+            "r_elbow", 
+            "l_hip_pitch", 
+            "l_hip_roll", 
+            "l_hip_yaw", 
+            "l_knee", 
+            "l_ankle_pitch", 
+            "l_ankle_roll", 
+            "r_hip_pitch", 
+            "r_hip_roll", 
+            "r_hip_yaw", 
+            "r_knee", 
+            "r_ankle_pitch", 
+            "r_ankle_roll"
+        }
+    );
+    m_vectorsCollectionServer.finalizeMetadata();
+    //-----------------------------------------------------
+
     std::string name;
     if (!parametersHandler->getParameter("name", name))
         return false;
@@ -132,6 +172,14 @@ bool Module::configure(yarp::os::ResourceFinder& rf)
         std::cerr << "[Module::configure] Trajectory_file parameter not specified." << std::endl;
         return false;
     }
+
+    if (!parametersHandler->getParameter("sleep_time_before_trajectory", m_sleepTotalTime))
+    {
+        std::cerr << "[Module::configure] Sleep_time parameter not specified." << std::endl;
+        return false;
+    }
+
+    std::cout << "Sleep for " << m_sleepTotalTime << " seconds before starting the trajectory." << std::endl;
 
     if (!this->createPolydriver(parametersHandler))
     {
@@ -174,7 +222,6 @@ bool Module::configure(yarp::os::ResourceFinder& rf)
                                  RobotInterface::IRobotControl::ControlMode::Position);
 
     m_state = State::positioning;
-
     return true;
 }
 
@@ -206,6 +253,17 @@ bool Module::updateModule()
         }
         if (isMotionDone)
         {
+            m_state = State::idle;
+        }
+        break;
+
+    case State::idle:
+        std::cout << "[Module::updateModule] Press a button to start the trajectory." << std::endl;
+        // std::cout << "Sleep current time: " << m_sleepCurrentTime << ". Sleep total time: " << m_sleepTotalTime << std::endl;
+        // m_sleepCurrentTime += m_dT;
+        getchar();
+        //if (m_sleepCurrentTime > m_sleepTotalTime)
+        {
             m_state = State::running;
         }
         break;
@@ -229,11 +287,11 @@ bool Module::updateModule()
             return false;
         }
 
-        if (!m_sensorBridge.getMotorCurrents(m_currentMotorCurr))
-        {
-            std::cerr << "[Module::updateModule] Error in reading motor currents." << std::endl;
-            return false;
-        }
+        // if (!m_sensorBridge.getMotorCurrents(m_currentMotorCurr))
+        // {
+        //     std::cerr << "[Module::updateModule] Error in reading motor currents." << std::endl;
+        //     return false;
+        // }
 
         // log data
         m_log["time"].push_back(yarp::os::Time::now());
@@ -279,6 +337,16 @@ bool Module::updateModule()
         return false;
     }
 
+    // my modifications
+    m_vectorsCollectionServer.prepareData();
+    m_vectorsCollectionServer.clearData();
+
+    Eigen::VectorXd desiredJointsRow;
+    desiredJointsRow = Conversions::toEigen(m_traj).row(m_idxTraj);
+    m_vectorsCollectionServer.populateData("positions", desiredJointsRow);
+
+    m_vectorsCollectionServer.sendData();
+    //-----------------------------------------------------
     return true;
 }
 
