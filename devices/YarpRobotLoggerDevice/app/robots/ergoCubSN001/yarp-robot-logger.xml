@@ -62,6 +62,15 @@ BSD-3-Clause license. -->
       <param name="signal_name">"grid_tracking"</param>
       <param name="carrier">"udp"</param>
     </group>
+    
+    <!-- my modifications -->
+    <group name="DesiredTrajectory">
+      <param name="local">"/yarp-robot-logger/exogenous_signals/logger-port"</param>
+      <param name="remote">"/joint-trajectory-player-port/logger"</param>
+      <param name="signal_name">"joint_trajectory"</param>
+      <param name="carrier">"udp"</param>
+    </group>
+    <!-- ................ -->
   </group>
 
   <group name="RobotCameraBridge">
