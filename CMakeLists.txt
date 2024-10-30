@@ -140,3 +140,5 @@ add_subdirectory(bindings)
 add_subdirectory(utilities)
 
 add_subdirectory(examples)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")

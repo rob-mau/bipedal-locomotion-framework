@@ -24,6 +24,8 @@
 #include <BipedalLocomotion/RobotInterface/YarpRobotControl.h>
 #include <BipedalLocomotion/RobotInterface/YarpSensorBridge.h>
 
+#include <BipedalLocomotion/YarpUtilities/VectorsCollectionServer.h>  /**< my modifications */
+
 namespace BipedalLocomotion
 {
 namespace JointTrajectoryPlayer
@@ -53,6 +55,9 @@ class Module : public yarp::os::RFModule
 
     unsigned int m_idxTraj{0}; /**< Index to iterate the trajectory. */
 
+    double m_sleepCurrentTime{0.0};
+    double m_sleepTotalTime;
+
     enum class State
     {
         idle,
@@ -68,6 +73,8 @@ class Module : public yarp::os::RFModule
     bool instantiateSensorBridge(std::shared_ptr<ParametersHandler::IParametersHandler> handler);
 
     bool readStateFromFile(const std::string& filename, const std::size_t numFields);
+
+    BipedalLocomotion::YarpUtilities::VectorsCollectionServer m_vectorsCollectionServer; /**< my modifications */
 
 public:
     /**
