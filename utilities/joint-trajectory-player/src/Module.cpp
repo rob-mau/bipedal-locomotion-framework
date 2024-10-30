@@ -272,16 +272,26 @@ bool Module::updateModule()
             m_state = State::idle;
         }
         break;
+
     // my modifications    
     case State::idle:
         std::cout << "[Module::updateModule] Press a button to start the trajectory." << std::endl;
         // std::cout << "Sleep current time: " << m_sleepCurrentTime << ". Sleep total time: " << m_sleepTotalTime << std::endl;
         // m_sleepCurrentTime += m_dT;
         getchar();
+        
         //if (m_sleepCurrentTime > m_sleepTotalTime)
         {
             m_state = State::running;
         }
+
+        // set control mode
+        if(!m_robotControl.setControlMode(RobotInterface::IRobotControl::ControlMode::PositionDirect))
+        {
+            log()->error("{} Unable to set the control mode to position direct.", logPrefix);
+            return false;
+        }
+
         break;
     //-----------------------------------------------------
 
@@ -338,8 +348,7 @@ bool Module::updateModule()
         }
 
         // set the reference
-        if (!m_robotControl
-                 .setReferences(Conversions::toEigen(m_traj).row(m_idxTraj),
+        if (!m_robotControl.setReferences(Conversions::toEigen(m_traj).row(m_idxTraj),
                                 RobotInterface::IRobotControl::ControlMode::PositionDirect))
         {
             log()->error("{} Unable to set the reference.", logPrefix);
