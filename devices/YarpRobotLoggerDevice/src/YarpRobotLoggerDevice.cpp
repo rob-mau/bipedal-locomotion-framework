@@ -122,7 +122,10 @@ YarpRobotLoggerDevice::YarpRobotLoggerDevice()
     m_sendDataRT = false;
 }
 
-YarpRobotLoggerDevice::~YarpRobotLoggerDevice() = default;
+YarpRobotLoggerDevice::~YarpRobotLoggerDevice()
+{
+    this->stop();
+}
 
 bool YarpRobotLoggerDevice::open(yarp::os::Searchable& config)
 {
